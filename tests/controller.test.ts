@@ -59,6 +59,23 @@ describe('background command controller', () => {
 });
 
 describe('fault injection and recovery', () => {
+  it.each(['PREFERENCES_SET', 'DIAGNOSTIC_CLEAR'] as const)('preserves an active request if %s storage fails', async type => {
+    const active = await runCommand({ type: 'SESSION_START', level: 'display', durationMinutes: 1 });
+    power.releaseKeepAwake.mockClear();
+    vi.mocked(chrome.storage.local.set).mockRejectedValueOnce(new Error('quota'));
+    const result = await runCommand(type === 'PREFERENCES_SET' ? { type, patch: { workspaceTheme: 'light' } } : { type });
+    expect(result.session).toEqual(active.session);
+    expect(result.warnings).toHaveLength(1); expect(power.releaseKeepAwake).not.toHaveBeenCalled();
+    expect(alarms.size).toBe(1);
+  });
+  it('reports a failed power release even if the compensation release also fails', async () => {
+    await runCommand({ type: 'SESSION_START', level: 'display', durationMinutes: 1 });
+    power.releaseKeepAwake.mockImplementationOnce(() => { throw new Error('original release'); }).mockImplementationOnce(() => { throw new Error('secondary release'); });
+    const result = await runCommand({ type: 'SESSION_STOP' });
+    expect(result.session.status).toBe('error'); expect(result.session.lastError?.code).toBe('SESSION_ERROR');
+    expect(result.warnings?.some(warning => warning.includes('Desative a extensão'))).toBe(true);
+    expect(alarms.size).toBe(0);
+  });
   it('rejects corrupt stored sessions and sanitizes preferences and logs', async () => {
     data.set(SESSION_KEY, { schemaVersion: 1, status: 'active', level: 'wrong' });
     data.set(PREFS_KEY, null); data.set(LOG_KEY, [null, {}, { id: 'x', at: -1, event: [], detail: '' }]);

@@ -150,11 +150,14 @@ export async function runCommand(input: unknown): Promise<Snapshot> {
       }
       case 'PREFERENCES_SET': {
         const preferences = { ...snapshot.preferences, ...parsePreferencePatch(input.patch) };
-        await chrome.storage.local.set({ [PREFS_KEY]: preferences });
+        try { await chrome.storage.local.set({ [PREFS_KEY]: preferences }); }
+        catch { return { ...snapshot, warnings: ['Não foi possível salvar as preferências. A sessão de energia foi preservada.'] }; }
         return { ...snapshot, preferences };
       }
       case 'DIAGNOSTIC_CLEAR': {
-        await chrome.storage.local.set({ [LOG_KEY]: [] }); return { ...snapshot, events: [] };
+        try { await chrome.storage.local.set({ [LOG_KEY]: [] }); }
+        catch { return { ...snapshot, warnings: ['Não foi possível limpar os eventos. A sessão de energia foi preservada.'] }; }
+        return { ...snapshot, events: [] };
       }
       case 'RESET_LOCAL_DATA': {
         await stopCurrent('reset', snapshot);

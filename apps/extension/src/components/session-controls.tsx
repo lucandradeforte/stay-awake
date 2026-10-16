@@ -195,6 +195,14 @@ export function SessionControls({
       {running && (
         <div className="session-details">
           <div>
+            <span>Início</span>
+            <strong>{session?.startedAt ? new Date(session.startedAt).toLocaleTimeString('pt-BR') : '—'}</strong>
+          </div>
+          <div>
+            <span>Duração</span>
+            <strong>{session?.durationMinutes === null ? 'Sem limite' : `${session?.durationMinutes} min`}</strong>
+          </div>
+          <div>
             <span>Modo</span>
             <strong>
               {session?.level === "display"
