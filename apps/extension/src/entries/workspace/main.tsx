@@ -6,7 +6,7 @@ import {
   RiClipboardLine, RiRefreshLine, RiDeleteBinLine, RiFullscreenLine
 } from '@remixicon/react';
 import {
-  formatDuration, remainingMs, VERSION, statusIsRunning, type Preferences, type Snapshot
+  formatDuration, remainingMs, VERSION, type Preferences, type Snapshot
 } from '@stay-awake/contracts';
 import { useSession } from '../../hooks/useSession';
 import { useWakeLock } from '../../features/wake-lock/useWakeLock';
@@ -90,7 +90,7 @@ function App() {
   const [tab, setTab] = useState<Tab>(initialTab());
   const [fullscreen, setFullscreen] = useState(false);
   const prefs = snapshot?.preferences;
-  const active = !!snapshot && statusIsRunning(snapshot.session);
+  const active = snapshot?.session.status === 'active';
   const wake = useWakeLock(active);
   useEffect(() => {
     const onHash = () => setTab(initialTab());
@@ -98,10 +98,10 @@ function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
   useEffect(() => { document.body.dataset.theme = prefs?.workspaceTheme ?? 'dark'; }, [prefs?.workspaceTheme]);
-  const change = (patch: Partial<Preferences>) => { void dispatch({type:'PREFERENCES_SET', patch}).catch(()=>{}); };
-  const reset = () => { if (window.confirm('Encerrar a sessão e apagar todos os dados locais da extensão?')) void dispatch({type:'RESET_LOCAL_DATA'}).catch(()=>{}); };
+  const change = (patch: Partial<Preferences>) => { void dispatch({type:'PREFERENCES_SET', patch}); };
+  const reset = () => { if (window.confirm('Encerrar a sessão e apagar todos os dados locais da extensão?')) void dispatch({type:'RESET_LOCAL_DATA'}); };
   const go = (next: Tab) => { updateHash(next);setTab(next); };
-  const enterPresentation = () => { setFullscreen(!fullscreen); if (!document.fullscreenElement) void document.documentElement.requestFullscreen?.().catch(()=>{}); else void document.exitFullscreen?.().catch(()=>{}); };
+  const enterPresentation = () => { setFullscreen(!fullscreen); if (!document.fullscreenElement) void document.documentElement.requestFullscreen?.().catch(()=>setFullscreen(false)); else void document.exitFullscreen?.().catch(()=>setFullscreen(true)); };
   return <div className={'workspace-layout ' + (fullscreen?'presentation':'')}>
     <aside className="sidebar"><Brand/><p className="sidebar-section">WORKSPACE</p><nav aria-label="Navegação do Workspace">
       {navigation.filter(item=>item.id !== 'developer' || prefs?.developerModeEnabled).map(item=><button key={item.id} onClick={()=>go(item.id)} className={'nav-item '+(tab===item.id?'nav-active':'')} aria-current={tab===item.id?'page':undefined}><item.icon size={19}/>{item.name}</button>)}
@@ -109,6 +109,7 @@ function App() {
     <div className="workspace-main"><header className="workspace-header"><div className="breadcrumb">Stay Awake <span>/</span> {navigation.find(item=>item.id===tab)?.name}</div>
       <div className="header-actions"><StatusPill status={snapshot?.session.status ?? 'inactive'}/><button className="icon-button" aria-label="Alternar tema" title="Alternar tema" onClick={()=>change({workspaceTheme:prefs?.workspaceTheme==='light'?'dark':'light'})}>{prefs?.workspaceTheme==='light'?<RiMoonLine size={19}/>:<RiSunLine size={19}/>}</button></div>
     </header><main className="workspace-content">
+      {tab !== 'session' && <InlineError message={error ?? snapshot?.session.lastError?.message ?? snapshot?.warnings?.join(' ') ?? null}/> }
       {tab==='session' && <div className="content-stack"><div className="page-intro"><span className="eyebrow">POWER MANAGEMENT</span><h1>Seu espaço, sem interrupções.</h1><p>Controle as solicitações de energia da tela e do sistema enquanto trabalha.</p></div>
         <div className="workspace-columns"><Card><SessionControls snapshot={snapshot} pending={pending} error={error} now={now} dispatch={dispatch} variant="workspace"/></Card>
           <div className="content-stack"><Card><SectionTitle>Screen Wake Lock <span className="subtle-tag">Página visível</span></SectionTitle>
@@ -119,7 +120,7 @@ function App() {
             <Card><SectionTitle>Limitações</SectionTitle><p className="small muted">A extensão solicita gerenciamento de energia, não desativa o bloqueio do Windows. A suspensão manual, bloqueios administrativos e encerramento do navegador podem prevalecer.</p></Card></div>
         </div>
       </div>}
-      {tab==='diagnostics' && snapshot && <DiagnosticView snapshot={snapshot} now={now} refresh={()=>void refresh()} clear={()=>void dispatch({type:'DIAGNOSTIC_CLEAR'}).catch(()=>{})}/>}
+      {tab==='diagnostics' && snapshot && <DiagnosticView snapshot={snapshot} now={now} refresh={()=>void refresh()} clear={()=>void dispatch({type:'DIAGNOSTIC_CLEAR'})}/>}
       {tab==='developer' && prefs?.developerModeEnabled && <div className="content-stack"><div className="page-intro"><span className="eyebrow">BETA / DEV</span><h1>Developer Lab</h1><p>Experimentos opcionais, visíveis e isolados do núcleo de energia.</p></div><VideoLab/></div>}
       {tab==='developer' && !prefs?.developerModeEnabled && <Card><p>Ative o Developer Lab em Configurações para visualizar os experimentos.</p><Button variant="secondary" onClick={()=>go('settings')}>Ir às configurações</Button></Card>}
       {tab==='settings' && prefs && <SettingsView prefs={prefs} change={change} reset={reset} error={error}/>}

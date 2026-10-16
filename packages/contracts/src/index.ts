@@ -43,7 +43,7 @@ export type Command =
   | { type: 'PREFERENCES_SET'; patch: Partial<Preferences> }
   | { type: 'DIAGNOSTIC_CLEAR' }
   | { type: 'RESET_LOCAL_DATA' };
-export interface Snapshot { session: Session; preferences: Preferences; events: EventLog[]; }
+export interface Snapshot { session: Session; preferences: Preferences; events: EventLog[]; warnings?: string[]; }
 export type Response = { ok: true; data: Snapshot } | { ok: false; error: string };
 
 export function validDuration(value: unknown): value is number | null {
@@ -63,8 +63,12 @@ export function isCommand(value: unknown): value is Command {
     default: return false;
   }
 }
-export function parsePreferencePatch(input: Partial<Preferences>): Partial<Preferences> {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+export function parsePreferencePatch(input: unknown): Partial<Preferences> {
   const result: Partial<Preferences> = {};
+  if (!isRecord(input)) return result;
   if (validDuration(input.defaultDurationMinutes) && input.defaultDurationMinutes !== null) result.defaultDurationMinutes = input.defaultDurationMinutes;
   if (validLevel(input.defaultLevel)) result.defaultLevel = input.defaultLevel;
   if (input.workspaceTheme === 'dark' || input.workspaceTheme === 'light') result.workspaceTheme = input.workspaceTheme;
@@ -72,6 +76,24 @@ export function parsePreferencePatch(input: Partial<Preferences>): Partial<Prefe
     if (typeof input[key] === 'boolean') result[key] = input[key];
   }
   return result;
+}
+
+const validTime = (value: unknown): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 && value <= 8.64e15;
+export function isSession(value: unknown): value is Session {
+  if (!isRecord(value) || value.schemaVersion !== SCHEMA_VERSION || typeof value.id !== 'string' || !validLevel(value.level) || !validDuration(value.durationMinutes) || !validTime(value.updatedAt)) return false;
+  if (!['inactive', 'starting', 'active', 'stopping', 'expired', 'reconciling', 'error'].includes(String(value.status))) return false;
+  if (value.startedAt !== null && !validTime(value.startedAt)) return false;
+  if (value.expiresAt !== null && !validTime(value.expiresAt)) return false;
+  if (value.lastError !== undefined && (!isRecord(value.lastError) || typeof value.lastError.code !== 'string' || typeof value.lastError.message !== 'string' || !validTime(value.lastError.at))) return false;
+  if (value.startedAt !== null) {
+    if (!value.id || value.updatedAt < value.startedAt) return false;
+    if (value.durationMinutes === null ? value.expiresAt !== null : value.expiresAt !== value.startedAt + value.durationMinutes * 60_000) return false;
+  } else if (value.expiresAt !== null || value.durationMinutes !== null) return false;
+  if (['active', 'starting', 'reconciling'].includes(String(value.status)) && (value.startedAt === null || !value.id)) return false;
+  return true;
+}
+export function isEventLog(value: unknown): value is EventLog {
+  return isRecord(value) && typeof value.id === 'string' && validTime(value.at) && typeof value.event === 'string' && typeof value.detail === 'string';
 }
 export function isExpired(session: Session, now: number): boolean {
   return session.expiresAt !== null && session.expiresAt <= now;

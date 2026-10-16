@@ -21,7 +21,7 @@ type Props = {
   pending: boolean;
   error: string | null;
   now: number;
-  dispatch: (command: Command) => Promise<Snapshot>;
+  dispatch: (command: Command) => Promise<Snapshot | undefined>;
   variant?: "popup" | "workspace";
 };
 export function SessionControls({
@@ -69,7 +69,7 @@ export function SessionControls({
         </div>
         <h1>
           {running
-            ? "Tela solicitada ativa"
+            ? "Solicitação de energia ativa"
             : session?.status === "error"
               ? "Falha na solicitação"
               : "Pronto para iniciar"}
@@ -212,7 +212,7 @@ export function SessionControls({
           </div>
         </div>
       )}
-      <InlineError message={error ?? session?.lastError?.message ?? null} />
+      <InlineError message={error ?? session?.lastError?.message ?? snapshot?.warnings?.join(' ') ?? null} />
       <Button
         className="full primary-cta"
         disabled={
@@ -244,7 +244,7 @@ export function SessionControls({
           onClick={() =>
             void dispatch({
               type: "SESSION_UPDATE_DURATION",
-              durationMinutes: session?.durationMinutes ?? 60,
+              durationMinutes: session!.durationMinutes,
             })
           }
         >

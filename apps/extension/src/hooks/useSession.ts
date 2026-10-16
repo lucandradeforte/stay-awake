@@ -24,7 +24,7 @@ export function useSession() {
   const dispatch = useCallback(async (command: Command) => {
     setPending(true); setError(null);
     try { const next = await send(command); setSnapshot(next); return next; }
-    catch (cause) { setError(readableError(cause)); throw cause; }
+    catch (cause) { setError(readableError(cause)); return undefined; }
     finally { setPending(false); }
   }, []);
   return { snapshot, pending, error, now, refresh, dispatch, clearError: () => setError(null) };

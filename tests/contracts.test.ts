@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_PREFERENCES, formatDuration, inactiveSession, isCommand,
-  isExpired, parsePreferencePatch, remainingMs, shouldResumeOnStartup, validDuration
+  isExpired, isSession, parsePreferencePatch, remainingMs, shouldResumeOnStartup, validDuration
 } from '../packages/contracts/src/index';
 describe('duration and message validation', () => {
   it('accepts finite minutes within 1..1440 and unlimited', () => {
@@ -19,6 +19,19 @@ describe('duration and message validation', () => {
   it('sanitizes preferences patches', () => {
     expect(parsePreferencePatch({ workspaceTheme:'dark', resumeOnBrowserRestart:true })).toEqual({ workspaceTheme:'dark', resumeOnBrowserRestart:true });
     expect(parsePreferencePatch({ developerModeEnabled:'yes' as unknown as boolean })).toEqual({});
+  });
+  it('rejects null and array patches; handles malformed persisted preferences', () => {
+    for (const patch of [null, [], 1, 'dark', undefined]) {
+      expect(isCommand({ type: 'PREFERENCES_SET', patch })).toBe(false);
+      expect(parsePreferencePatch(patch)).toEqual({});
+    }
+  });
+  it('requires a complete, temporally consistent stored session', () => {
+    const session = { ...inactiveSession(1000), id: 'session', status: 'active', startedAt: 1000, durationMinutes: 1, expiresAt: 61000 };
+    expect(isSession(session)).toBe(true);
+    for (const patch of [{ status: 'unknown' }, { startedAt: null }, { expiresAt: Infinity }, { expiresAt: 1 }, { durationMinutes: null }, { id: '' }, { updatedAt: -1 }, { level: 'unknown' }, { lastError: null }, { schemaVersion: 2 }]) {
+      expect(isSession({ ...session, ...patch })).toBe(false);
+    }
   });
 });
 describe('session time', () => {
