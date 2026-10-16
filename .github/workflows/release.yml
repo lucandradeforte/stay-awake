@@ -3,26 +3,95 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      windows_qa_confirmed:
+        description: Chrome and Edge Windows QA completed for this exact tag
+        type: boolean
+        default: false
+      qa_evidence_url:
+        description: Public GitHub URL with completed Windows QA evidence (stable tags only)
+        type: string
+        default: ''
 permissions:
-  contents: write
+  contents: read
 jobs:
-  release:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - run: if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
-      - run: npm run check
-      - run: node scripts/verify-build.mjs
-      - run: npm run package:extension
-      - name: Publish assets (tag only)
-        if: startsWith(github.ref, 'refs/tags/v')
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Validate release channel and Windows gate
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release create "${GITHUB_REF_NAME}" releases/*.zip releases/*.sha256 --verify-tag --generate-notes
+          WINDOWS_QA: ${{ inputs.windows_qa_confirmed }}
+          QA_EVIDENCE: ${{ inputs.qa_evidence_url }}
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            release_version="${GITHUB_REF_NAME#v}"
+            if [[ ! "$release_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[1-9][0-9]*)?$ ]]; then
+              echo 'Unsupported release tag'
+              exit 1
+            fi
+            echo "RELEASE_VERSION=$release_version" >> "$GITHUB_ENV"
+            if [[ "$release_version" != *-rc.* ]]; then
+              if [[ "$WINDOWS_QA" != true || ! "$QA_EVIDENCE" =~ ^https://github.com/lucandradeforte/stay-awake/(issues|pull)/[0-9]+ ]]; then
+                echo 'Stable release requires manual dispatch on the tag, completed Windows QA and a public evidence URL.'
+                exit 1
+              fi
+            fi
+          fi
+      - run: npm install --global npm@11.21.1 --ignore-scripts
+      - run: npm ci
+      - run: npm install-scripts ls
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm audit --audit-level=high
+      - run: npm run check
+      - run: npm run verify:build
+      - run: npm run package:extension
+      - run: npm run verify:package
+      - run: npx playwright install --with-deps chromium
+      - name: Test the release artifact
+        env:
+          EXTENSION_PATH: .playwright/unpacked
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-test-evidence
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
       - uses: actions/upload-artifact@v4
         with:
           name: stay-awake-extension
           path: releases/*
+          retention-days: 14
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: verify
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: stay-awake-extension
+          path: releases
+      - name: Publish the validated tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QA_EVIDENCE: ${{ inputs.qa_evidence_url }}
+        shell: bash
+        run: |
+          flags=()
+          if [[ "$GITHUB_REF_NAME" == *-rc.* ]]; then
+            flags+=(--prerelease --notes 'Release candidate. Automated gates passed; Chrome/Edge Windows physical QA remains pending. This is not a stable release.')
+          else
+            flags+=(--notes "Windows QA evidence: $QA_EVIDENCE")
+          fi
+          gh release create "$GITHUB_REF_NAME" releases/*.zip releases/*.sha256 --verify-tag --generate-notes "${flags[@]}"

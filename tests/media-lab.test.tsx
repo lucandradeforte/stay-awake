@@ -37,7 +37,7 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 const start = () => fireEvent.click(screen.getByRole('button', { name: 'Iniciar reprodução' }));
-const stop = () => fireEvent.click(screen.getByRole('button', { name: 'Parar', exact: true }));
+const stop = () => fireEvent.click(screen.getByRole('button', { name: /^Parar$/ }));
 const fileMode = () => fireEvent.click(screen.getByRole('button', { name: 'Arquivo local' }));
 const generatedMode = () => fireEvent.click(screen.getByRole('button', { name: 'Canvas → vídeo' }));
 const selectFile = (file = new File(['video'], 'private-name.webm', { type: 'video/webm' })) => {

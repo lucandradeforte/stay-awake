@@ -26,7 +26,7 @@ small,.small {font-size:12px;}
 .brand small {display:block;color:var(--muted);font-size:9px;letter-spacing:.15em;line-height:1.5;}
 .icon-button {background:transparent;border:1px solid transparent;color:var(--muted);width:38px;height:38px;display:inline-flex;justify-content:center;align-items:center;border-radius:10px;}
 .icon-button:hover {color:var(--text);background:var(--raised);border-color:var(--line)}
-.btn {min-height:40px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:640;transition:background .15s,transform .15s;}
+.btn {min-height:40px;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:640;transition:transform .15s;}
 .btn:hover:not(:disabled) {transform:translateY(-1px)}
 .btn-primary {background:var(--accent);color:var(--accent-ink)}
 .btn-primary:hover {filter:brightness(1.06)}

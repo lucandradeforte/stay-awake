@@ -4,25 +4,72 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   quality:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - name: Install dependencies
-        run: if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
-      - name: Typecheck
-        run: npm run typecheck
-      - name: ESLint
-        run: npm run lint
-      - name: Unit/integration tests
-        run: npm test
-      - name: Build
-        run: npm run build
-      - name: Validate release manifest
-        run: node scripts/verify-build.mjs
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Pin npm and install locked dependencies
+        run: |
+          npm install --global npm@11.21.1 --ignore-scripts
+          npm ci
+          npm install-scripts ls
+      - run: npm run check
+      - run: npm run verify:build
+      - run: npm run package:extension
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extension-package
+          path: releases/*
+          retention-days: 14
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm install --global npm@11.21.1 --ignore-scripts
+      - run: npm ci
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - name: Audit build and test dependencies
+        run: npm audit --audit-level=high
+  e2e:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm install --global npm@11.21.1 --ignore-scripts
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - uses: actions/download-artifact@v4
+        with:
+          name: extension-package
+          path: releases
+      - name: Verify and extract the exact CI artifact
+        run: npm run verify:package
+      - name: Test the unpacked ZIP and website
+        env:
+          EXTENSION_PATH: .playwright/unpacked
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-evidence
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14

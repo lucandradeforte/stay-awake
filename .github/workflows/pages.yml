@@ -5,6 +5,8 @@ on:
     paths:
       - 'apps/website/**'
       - 'packages/design-tokens/**'
+      - '.npmrc'
+      - '.nvmrc'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -26,8 +28,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - run: if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm install --global npm@11.21.1 --ignore-scripts
+      - run: npm ci
       - name: Build static website
         run: npm run build:website
       - uses: actions/configure-pages@v5
