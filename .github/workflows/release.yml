@@ -1,0 +1,28 @@
+name: Release extension
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - run: npm run check
+      - run: node scripts/verify-build.mjs
+      - run: npm run package:extension
+      - name: Publish assets (tag only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" releases/*.zip releases/*.sha256 --verify-tag --generate-notes
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stay-awake-extension
+          path: releases/*

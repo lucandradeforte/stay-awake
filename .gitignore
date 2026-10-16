@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.playwright/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.vscode/
+*.zip
+*.sha256
