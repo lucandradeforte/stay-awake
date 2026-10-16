@@ -1,2 +1,2 @@
 import { defineConfig } from 'vitest/config';
-export default defineConfig({ test: { environment: 'node', include: ['tests/**/*.test.ts'], coverage: { reporter: ['text', 'html'], include: ['packages/contracts/src/**/*.ts', 'apps/extension/src/background/**/*.ts'] } } });
+export default defineConfig({ esbuild: { jsx: 'automatic' }, test: { environment: 'node', include: ['tests/**/*.test.{ts,tsx}'], coverage: { reporter: ['text', 'html'], include: ['packages/contracts/src/**/*.ts', 'apps/extension/src/background/**/*.ts'] } } });
