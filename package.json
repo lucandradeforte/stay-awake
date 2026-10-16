@@ -19,12 +19,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "check": "npm run format:check && npm run typecheck && npm run lint && npm run test && npm run build",
     "package:extension": "node scripts/package-extension.mjs",
     "verify:package": "node scripts/verify-package.mjs",
     "verify:build": "node scripts/verify-build.mjs",
     "release:local": "npm run build:extension && npm run package:extension",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "engines": {
     "node": ">=22.13.0",
@@ -33,7 +35,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.52.0",
+    "@playwright/test": "^1.64.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.8",
     "@types/node": "^22.14.0",

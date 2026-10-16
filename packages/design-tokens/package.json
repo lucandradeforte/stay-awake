@@ -2,5 +2,7 @@
   "name": "@stay-awake/design-tokens",
   "version": "1.0.0",
   "type": "module",
-  "exports": { "./theme.css": "./theme.css" }
+  "exports": {
+    "./theme.css": "./theme.css"
+  }
 }

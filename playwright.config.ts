@@ -7,10 +7,13 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   outputDir: 'test-results',
   webServer: {
-    command: 'npm exec --workspace @stay-awake/website -- vite preview --host 127.0.0.1 --port 4173 --strictPort',
-    url: 'http://127.0.0.1:4173/stay-awake/',
-    reuseExistingServer: !process.env.CI
+    command:
+      'npm exec --workspace @stay-awake/website -- vite preview --host 127.0.0.1 --port 4173 --strictPort',
+    // In this WSL environment, HTTP probes to an unbound port could remain pending.
+    // Wait for Vite's readiness line; the website tests verify HTTP and content.
+    wait: { stdout: /Local:.*4173/ },
+    timeout: 15_000,
   },
   use: { trace: 'retain-on-failure', screenshot: 'only-on-failure' },
-  workers: 1
+  workers: 1,
 });

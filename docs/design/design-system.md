@@ -6,16 +6,16 @@ Vercel, Next.js, shadcn/ui e GitHub **como direção**, não cópia de layouts o
 
 ## Tokens (packages/design-tokens/theme.css)
 
-| Token | Dark | Light (Workspace apenas) |
-|---|---|---|
-| background | `#0B0D10` | `#F7F8FA` |
-| surface | `#111419` | `#FFFFFF` |
-| raised | `#1A1F26` | `#F0F2F5` |
-| border | `#292F38` | `#DFE3E8` |
-| text | `#E7EAF0` | `#171B20` |
-| muted | `#9AA4B2` | `#5F6875` |
-| accent | `#8FDCB1` | `#276749` |
-| warning | `#E7C479` | `#946414` |
+| Token      | Dark      | Light (Workspace apenas) |
+| ---------- | --------- | ------------------------ |
+| background | `#0B0D10` | `#F7F8FA`                |
+| surface    | `#111419` | `#FFFFFF`                |
+| raised     | `#1A1F26` | `#F0F2F5`                |
+| border     | `#292F38` | `#DFE3E8`                |
+| text       | `#E7EAF0` | `#171B20`                |
+| muted      | `#9AA4B2` | `#5F6875`                |
+| accent     | `#8FDCB1` | `#276749`                |
+| warning    | `#E7C479` | `#946414`                |
 
 Tipografia: Inter se instalada pelo usuário, Segoe UI e system-ui como fallback sem download de fontes. 4px spacing base. Bordas discretas, sombras restritas.
 

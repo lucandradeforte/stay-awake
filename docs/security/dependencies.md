@@ -7,7 +7,7 @@ Revisão de 16/10/2026. A instalação usa `package-lock.json`, Node 22 (mínimo
 - Baseline após adicionar ferramentas de teste React: 10 achados (2 críticos, 5 altos, 3 moderados), incluindo ferramentas de desenvolvimento.
 - Após atualização: `npm audit` retorna zero vulnerabilidades na consulta executada. Isso é um resultado datado da base de advisories, não garantia de ausência de vulnerabilidades futuras.
 - ESLint 9 chegou ao fim de suporte. ESLint 10.12.0, `@eslint/js` 10.0.1, `typescript-eslint` 8.71.2 e plugin Hooks 7.1.1 têm peer dependencies compatíveis. As duas regras Hooks já usadas foram preservadas; regras específicas do React Compiler exigem adoção separada.
-- Vitest 5.0.5 remove a cadeia vulnerável de `tinypool`/mocker da linha anterior. Os 47 testes existentes após as correções passaram nessa versão.
+- Vitest 5.0.5 remove a cadeia vulnerável de `tinypool`/mocker da linha anterior. Os 50 testes existentes após as correções passaram nessa versão.
 - Tailwind 4.3.3 e seu plugin PostCSS substituem a cadeia Tailwind 3/braces sem correção disponível para o achado de stack exhaustion. A mudança é de build/CSS; validar aparência com E2E. Autoprefixer e configuração Tailwind 3 foram removidos; tokens e classes próprias permanecem.
 - Vite 6.4.4 e TypeScript 5.8.3 foram mantidos; atualizar uma major sem necessidade aumentaria o escopo.
 

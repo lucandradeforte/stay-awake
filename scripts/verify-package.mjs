@@ -3,12 +3,15 @@ import { readFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 const root = resolve(import.meta.dirname, '..');
-const manifest = JSON.parse(readFileSync(resolve(root, 'apps/extension/dist/manifest.json'), 'utf8'));
+const manifest = JSON.parse(
+  readFileSync(resolve(root, 'apps/extension/dist/manifest.json'), 'utf8'),
+);
 const version = process.env.RELEASE_VERSION ?? manifest.version;
 if (!/^\d+\.\d+\.\d+(?:-rc\.[1-9]\d*)?$/.test(version)) throw new Error('Invalid package version');
 const zip = resolve(root, `releases/stay-awake-v${version}-chrome-edge.zip`);
 const digest = createHash('sha256').update(readFileSync(zip)).digest('hex');
-if (readFileSync(zip + '.sha256', 'utf8') !== `${digest}  ${basename(zip)}\n`) throw new Error('Checksum mismatch');
+if (readFileSync(zip + '.sha256', 'utf8') !== `${digest}  ${basename(zip)}\n`)
+  throw new Error('Checksum mismatch');
 const python = process.platform === 'win32' ? 'py' : 'python3';
 const script = String.raw`import pathlib,sys,zipfile
 source,archive,target=sys.argv[1:]
@@ -28,6 +31,18 @@ with zipfile.ZipFile(archive) as z:
  print('Checksum, inventory and extracted content verified:',len(entries),'files')
 `;
 const target = resolve(process.env.EXTENSION_PATH ?? '.playwright/unpacked');
-const result = spawnSync(python, [...(process.platform === 'win32' ? ['-3'] : []), '-c', script, resolve(root, 'apps/extension/dist'), zip, target], { encoding: 'utf8' });
-if (result.status !== 0) throw new Error(`Package verification failed: ${result.stderr || result.error}`);
+const result = spawnSync(
+  python,
+  [
+    ...(process.platform === 'win32' ? ['-3'] : []),
+    '-c',
+    script,
+    resolve(root, 'apps/extension/dist'),
+    zip,
+    target,
+  ],
+  { encoding: 'utf8' },
+);
+if (result.status !== 0)
+  throw new Error(`Package verification failed: ${result.stderr || result.error}`);
 console.log(result.stdout.trim());

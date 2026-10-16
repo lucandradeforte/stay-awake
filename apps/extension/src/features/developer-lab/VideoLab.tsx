@@ -1,10 +1,24 @@
-import { RiPlayLine, RiPauseLine, RiStopLine, RiFileVideoLine } from "@remixicon/react";
-import { Button, Card } from "../../components/ui";
-import { useMediaLab } from "./useMediaLab";
+import { RiPlayLine, RiPauseLine, RiStopLine, RiFileVideoLine } from '@remixicon/react';
+import { Button, Card } from '../../components/ui';
+import { useMediaLab } from './useMediaLab';
 
 export function VideoLab() {
-  const { canvas, video, mode, setMode, status, visibility, error, stop,
-    startGenerated, onFile, pause, onPause, onPlaying, onMediaError } = useMediaLab();
+  const {
+    canvas,
+    video,
+    mode,
+    setMode,
+    status,
+    visibility,
+    error,
+    stop,
+    startGenerated,
+    onFile,
+    pause,
+    onPause,
+    onPlaying,
+    onMediaError,
+  } = useMediaLab();
   return (
     <Card>
       <div className="section-title">
@@ -14,27 +28,26 @@ export function VideoLab() {
         <span className="beta-badge">BETA / DEV</span>
       </div>
       <p className="muted">
-        Experimento visível de reprodução de vídeo HTML5. Não há solicitação
-        direta ao bloqueador nativo do Chromium, nem garantia de manter o
-        Windows desbloqueado.
+        Experimento visível de reprodução de vídeo HTML5. Não há solicitação direta ao bloqueador
+        nativo do Chromium, nem garantia de manter o Windows desbloqueado.
       </p>
       <div className="segment spaced" role="group" aria-label="Origem de vídeo">
         <button
-          aria-pressed={mode === "generated"}
-          className={mode === "generated" ? "selected" : ""}
+          aria-pressed={mode === 'generated'}
+          className={mode === 'generated' ? 'selected' : ''}
           onClick={() => {
             stop();
-            setMode("generated");
+            setMode('generated');
           }}
         >
           Canvas → vídeo
         </button>
         <button
-          aria-pressed={mode === "file"}
-          className={mode === "file" ? "selected" : ""}
+          aria-pressed={mode === 'file'}
+          className={mode === 'file' ? 'selected' : ''}
           onClick={() => {
             stop();
-            setMode("file");
+            setMode('file');
           }}
         >
           Arquivo local
@@ -55,7 +68,7 @@ export function VideoLab() {
           aria-label="Vídeo experimental"
         />
       </div>
-      {mode === "file" && (
+      {mode === 'file' && (
         <label className="field spaced">
           <span>Escolher vídeo local (não enviado à rede)</span>
           <input
@@ -63,22 +76,18 @@ export function VideoLab() {
             accept="video/*"
             onChange={(e) => {
               void onFile(e.target.files?.[0]);
-              e.currentTarget.value = "";
+              e.currentTarget.value = '';
             }}
           />
         </label>
       )}
       <div className="action-row spaced">
-        {mode === "generated" && (
+        {mode === 'generated' && (
           <Button onClick={() => void startGenerated()}>
             <RiPlayLine size={18} /> Iniciar reprodução
           </Button>
         )}
-        <Button
-          variant="secondary"
-          onClick={pause}
-          disabled={status === "Parado"}
-        >
+        <Button variant="secondary" onClick={pause} disabled={status === 'Parado'}>
           <RiPauseLine size={17} /> Pausar / retomar
         </Button>
         <Button variant="secondary" onClick={stop}>
@@ -96,9 +105,7 @@ export function VideoLab() {
         </div>
         <div>
           <span>Origem</span>
-          <strong>
-            {mode === "generated" ? "Canvas (12 fps)" : "Arquivo do usuário"}
-          </strong>
+          <strong>{mode === 'generated' ? 'Canvas (12 fps)' : 'Arquivo do usuário'}</strong>
         </div>
       </div>
       {error && (
@@ -107,9 +114,8 @@ export function VideoLab() {
         </p>
       )}
       <p className="helper">
-        A reprodução é interrompida ao ocultar esta aba. Comparações precisam
-        ser verificadas manualmente; reproduzir mídia não garante um bloqueio de
-        economia de energia.
+        A reprodução é interrompida ao ocultar esta aba. Comparações precisam ser verificadas
+        manualmente; reproduzir mídia não garante um bloqueio de economia de energia.
       </p>
     </Card>
   );
