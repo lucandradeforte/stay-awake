@@ -6,7 +6,16 @@
   "description": "Controle local e temporizado de energia da tela e do sistema, sem alterar configurações do Windows.",
   "permissions": ["power", "storage", "alarms"],
   "background": { "service_worker": "background.js", "type": "module" },
-  "action": { "default_title": "Stay Awake", "default_popup": "popup.html", "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png" } },
-  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "action": {
+    "default_title": "Stay Awake",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png" }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "options_page": "workspace.html"
 }

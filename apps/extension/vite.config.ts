@@ -7,13 +7,21 @@ export default defineConfig({
   plugins: [react()],
   base: './',
   build: {
-    outDir: 'dist', emptyOutDir: true, sourcemap: false,
+    outDir: 'dist',
+    emptyOutDir: true,
+    sourcemap: false,
     rollupOptions: {
-      input: { popup: resolve(projectDir, 'popup.html'), workspace: resolve(projectDir, 'workspace.html'), background: resolve(projectDir, 'src/background/index.ts') },
+      input: {
+        popup: resolve(projectDir, 'popup.html'),
+        workspace: resolve(projectDir, 'workspace.html'),
+        background: resolve(projectDir, 'src/background/index.ts'),
+      },
       output: {
-        entryFileNames: chunk => chunk.name === 'background' ? 'background.js' : 'assets/[name]-[hash].js',
-        chunkFileNames: 'assets/[name]-[hash].js', assetFileNames: 'assets/[name]-[hash][extname]'
-      }
-    }
-  }
+        entryFileNames: (chunk) =>
+          chunk.name === 'background' ? 'background.js' : 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
+      },
+    },
+  },
 });
